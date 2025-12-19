@@ -1,4 +1,4 @@
-# 각 요소에 3 곱하기
+'''# 각 요소에 3 곱하기
 a = [1, 2, 3, 4]
 result = []
 
@@ -145,14 +145,24 @@ for name, korean, english in zip_longest(names, scores, english):
 for i in range(1,9,2) :
     print(f"{i * '*':^13}")
 print()
+'''
 
+# 다이아
+'''
 for i in range(1, 11 + 1, 2):
     print(f"{'*'*i:^11}")
 
 for i in range(11 - 2, 0, -2):
     print(f"{'*' * i:^11}")
-print()
+print()'''
 
+for i in range(-5,6):
+    stars = 11 - abs(i)*2
+    star_count = " ".join("*" * stars)
+    print(f"{star_count:^21}")
+
+'''
+# 선택정렬
 li = [7, 2, 5, 8, 9, 1, 3, 6, 4]
 print(li)
 n=len(li)
@@ -167,8 +177,10 @@ for i in range(n):
 print(li)
 print()
 
+# 버블정렬
 li = [64, 25, 12, 22, 11]
 print(li)
+n=len(li)
 for i in range(n):
         for j in range(0, n - i - 1):
             if li[j] > li[j + 1]:
@@ -176,3 +188,4 @@ for i in range(n):
         print(li)
 print(li)
 print()
+'''
