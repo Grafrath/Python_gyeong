@@ -1,92 +1,20 @@
+# Pygame 초기화, 이벤트 루프, 렌더링 (실행 파일)
+
 import pygame
 import random
-import warnings
 import os
 import sys
 import winsound
+from constants import *
+from utils import Particle, TextManager
+from logic import *
 
-# setuptools 경고 무시
-warnings.filterwarnings("ignore", category=UserWarning)
-
-# --- 경로 및 파일명 설정 ---
-if getattr(sys, 'frozen', False):
-    BASE_PATH = sys._MEIPASS
-else:
-    BASE_PATH = os.path.dirname(os.path.abspath(__file__))
-MUSIC_DIR = os.path.join(BASE_PATH, "music")
-
-# BGM 및 효과음 파일명
-NORMAL_BGM = "03. A-Type Music (Korobeiniki).mp3"
-HIDDEN_BGM = "Suisei's Tetris.mp3"
-LEVEL_UP_SOUND_PATH = os.path.join(MUSIC_DIR, "mixkit-game-level-completed-2059.wav")
-LINE_CLEAR_SOUND_PATH = os.path.join(MUSIC_DIR, "A quick, ascending chime for a single line clear in Tetris.-edited-2025-12-26T15-09-09.mp3")
-HARD_DROP_SOUND_PATH = os.path.join(MUSIC_DIR, "A subtle, percussive thud for a Tetris block landing.-edited-2025-12-26T15-08-00.wav")
-
-# 엔딩 BGM 파일명
-SND_DEATHMATCH = "18. Game Over.mp3"
-SND_ENDING_LV5 = "09. Ending.mp3"
-SND_ENDING_LV10 = "15. Ending (Level 9, High 5).mp3"
-SND_ENDING_TRUE = "16. True Ending (Level 9, High 5, 100000 Points).mp3"
-
-# --- 파티클 시스템 (백업 코드에서 복구) ---
-class Particle:
-    def __init__(self, x, y, color):
-        self.x, self.y, self.color = x, y, color
-        self.vx = random.uniform(-5, 5)
-        self.vy = random.uniform(-5, 5)
-        self.gravity = 0.2
-        self.life = random.randint(20, 40)
-        self.age = 0
-        self.size = random.randint(2, 5)
-
-    def update(self):
-        self.x += self.vx
-        self.y += self.vy
-        self.vy += self.gravity
-        self.age += 1
-
-    def draw(self, surf):
-        alpha = max(0, 255 - (self.age * 255 // self.life))
-        p_surf = pygame.Surface((self.size, self.size), pygame.SRCALPHA)
-        p_surf.fill((*self.color, alpha))
-        surf.blit(p_surf, (int(self.x), int(self.y)))
-
-# --- 텍스트 캐싱 시스템 (메인 코드 유지) ---
-class TextManager:
-    def __init__(self):
-        self.fonts = {
-            "title": pygame.font.SysFont("arial", 16, bold=True),
-            "val": pygame.font.SysFont("consolas", 20, bold=True),
-            "large": pygame.font.SysFont("arial", 45, bold=True),
-            "bsod_lg": pygame.font.SysFont("malgungothic", 120, bold=True),
-            "bsod_md": pygame.font.SysFont("malgungothic", 40, bold=True),
-            "bsod_sm": pygame.font.SysFont("malgungothic", 25)
-        }
-        self.cache = {}
-        self.static_labels = {
-            "NEXT": self.fonts["title"].render("NEXT", True, (245, 245, 245)),
-            "HOLD": self.fonts["title"].render("HOLD", True, (245, 245, 245)),
-            "SCORE": self.fonts["title"].render("SCORE", True, (245, 245, 245)),
-            "LEVEL": self.fonts["title"].render("LEVEL", True, (245, 245, 245)),
-            "COMBO": self.fonts["title"].render("COMBO", True, (245, 245, 245)),
-            "PAUSED": self.fonts["large"].render("PAUSED", True, (245, 245, 245)),
-            "GAME OVER": self.fonts["large"].render("GAME OVER", True, (245, 245, 245))
-        }
-
-    def get_val_surf(self, text, color):
-        key = f"{text}_{color}"
-        if key not in self.cache:
-            self.cache[key] = self.fonts["val"].render(str(text), True, color)
-        return self.cache[key]
-
-# --- 음악 관련 함수 ---
+# --- 음악 및 연출 함수 ---
 def play_game_music():
-    is_hidden = random.randint(1, 10) == 1
-    bgm_file = HIDDEN_BGM if is_hidden else NORMAL_BGM
+    bgm_file = HIDDEN_BGM if random.randint(1, 10) == 1 else NORMAL_BGM
     try:
         pygame.mixer.music.load(os.path.join(MUSIC_DIR, bgm_file))
-        pygame.mixer.music.set_volume(0.4)
-        pygame.mixer.music.play(-1)
+        pygame.mixer.music.set_volume(0.4); pygame.mixer.music.play(-1)
     except: pass
 
 def load_sounds():
@@ -108,37 +36,14 @@ def play_ending_music(level, score):
     try:
         path = os.path.join(MUSIC_DIR, file)
         if os.path.exists(path):
-            pygame.mixer.music.load(path)
-            pygame.mixer.music.play()
+            pygame.mixer.music.load(path); pygame.mixer.music.play()
     except: pass
     return status
 
-# --- 설정 및 환경 변수 ---
-BLOCK_SIZE = 30
-GRID_WIDTH, GRID_HEIGHT = 10, 20
-SIDEBAR_WIDTH = 200
-GAME_WIDTH, GAME_HEIGHT = BLOCK_SIZE * GRID_WIDTH, BLOCK_SIZE * GRID_HEIGHT
-SCREEN_WIDTH, SCREEN_HEIGHT = GAME_WIDTH + SIDEBAR_WIDTH, GAME_HEIGHT
-COLOR_MAIN_BG, COLOR_SIDEBAR_BG = (30, 31, 40), (45, 46, 60)
-COLOR_GRID_LINE, WHITE = (38, 39, 50), (245, 245, 245)
-
-COLORS = {
-    "I": (0, 200, 200), "O": (210, 210, 0), "T": (155, 40, 215), 
-    "S": (0, 200, 0), "Z": (215, 0, 0), "J": (0, 85, 220), "L": (220, 130, 0)
-}
-TETROMINOES = {
-    "I": {"shape": [[1,1,1,1]]}, "O": {"shape": [[1,1],[1,1]]}, 
-    "T": {"shape": [[0,1,0],[1,1,1]]}, "S": {"shape": [[0,1,1],[1,1,0]]}, 
-    "Z": {"shape": [[1,1,0],[0,1,1]]}, "J": {"shape": [[1,0,0],[1,1,1]]}, 
-    "L": {"shape": [[0,0,1],[1,1,1]]}
-}
-
-# --- 보조 그리기 함수 ---
 def draw_block(surf, x, y, color, size=BLOCK_SIZE, is_ghost=False):
     rect = (x, y, size, size)
     if is_ghost:
-        pygame.draw.rect(surf, color, rect, 1)
-        return
+        pygame.draw.rect(surf, color, rect, 1); return
     bright = [min(c + 75, 255) for c in color]
     dark = [max(c - 75, 0) for c in color]
     bw = size // 8
@@ -150,69 +55,34 @@ def draw_block(surf, x, y, color, size=BLOCK_SIZE, is_ghost=False):
 def draw_bsod(screen, score, tm):
     info = pygame.display.Info()
     screen = pygame.display.set_mode((info.current_w, info.current_h), pygame.FULLSCREEN)
-    winsound.Beep(1000, 500)
-    screen.fill((0, 0, 170))
+    winsound.Beep(1000, 500); screen.fill((0, 0, 170))
     msgs = [
         (tm.fonts["bsod_lg"], ":(", 0),
         (tm.fonts["bsod_md"], "재능 부족 에러가 발생했습니다.", 200),
         (tm.fonts["bsod_sm"], f"ERROR_CODE: TALENT_NOT_FOUND (Score: {score}/5000)", 300),
         (tm.fonts["bsod_sm"], "당신의 실력으로는 시스템을 더 이상 가동할 수 없습니다.", 350),
-        (tm.fonts["bsod_sm"], "처음부터 다시 배우고 오세요. 게임을 강제 종료합니다.", 550)
+        (tm.fonts["bsod_sm"], "처음부터 다시 배우고 오세요. 아무 키나 누르면 종료합니다.", 550)
     ]
-    for f, t, y in msgs:
-        screen.blit(f.render(t, True, WHITE), (info.current_w // 10, info.current_h // 5 + y))
+    for f, t, y in msgs: screen.blit(f.render(t, True, WHITE), (info.current_w // 10, info.current_h // 5 + y))
     pygame.display.flip()
     waiting = True
     while waiting:
         for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN or event.type == pygame.QUIT:
-                waiting = False
+            if event.type in [pygame.KEYDOWN, pygame.QUIT]: waiting = False
     pygame.quit(); sys.exit()
 
-# --- 로직 함수 ---
-def create_board(): return [[None for _ in range(GRID_WIDTH)] for _ in range(GRID_HEIGHT)]
-def get_piece_by_name(name):
-    shape = TETROMINOES[name]["shape"]
-    return {"name": name, "shape": shape, "color": COLORS[name], "x": GRID_WIDTH // 2 - len(shape[0]) // 2, "y": -len(shape)}
-def get_7_bag():
-    bag = list(TETROMINOES.keys()); random.shuffle(bag)
-    return [get_piece_by_name(n) for n in bag]
-def is_valid_move(board, piece, adj_x=0, adj_y=0, new_shape=None):
-    shape = new_shape if new_shape is not None else piece["shape"]
-    for y, row in enumerate(shape):
-        for x, cell in enumerate(row):
-            if cell:
-                nx, ny = piece["x"] + x + adj_x, piece["y"] + y + adj_y
-                if nx < 0 or nx >= GRID_WIDTH or ny >= GRID_HEIGHT: return False
-                if ny >= 0 and board[ny][nx] is not None: return False
-    return True
-def get_ghost_y(board, piece):
-    gy = piece["y"]
-    while is_valid_move(board, piece, adj_y=(gy - piece["y"] + 1)): gy += 1
-    return gy
-def check_t_spin(board, piece):
-    if piece["name"] != "T": return False
-    cx, cy = piece["x"] + 1, piece["y"] + 1
-    count = 0
-    for x, y in [(cx-1, cy-1), (cx+1, cy-1), (cx-1, cy+1), (cx+1, cy+1)]:
-        if x < 0 or x >= GRID_WIDTH or y >= GRID_HEIGHT or (y >= 0 and board[y][x] is not None): count += 1
-    return count >= 3
-
-# --- 렌더링 시스템 ---
+# --- 렌더링 ---
 def render_all(board, cp, n_queue, hp, score, level, combo, is_game_over, is_paused, flash_alpha, tm, particles):
     temp_surf = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
     temp_surf.fill(COLOR_SIDEBAR_BG)
-    
     bg_color = (50, 20, 20) if level >= 15 else COLOR_MAIN_BG
     pygame.draw.rect(temp_surf, bg_color, (0, 0, GAME_WIDTH, SCREEN_HEIGHT))
     for x in range(GRID_WIDTH):
         for y in range(GRID_HEIGHT):
             pygame.draw.rect(temp_surf, COLOR_GRID_LINE, (x*BLOCK_SIZE, y*BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE), 1)
-    
     for y, row in enumerate(board):
-        for x, color in enumerate(row):
-            if color: draw_block(temp_surf, x*BLOCK_SIZE, y*BLOCK_SIZE, color)
-            
+        for x, col in enumerate(row):
+            if col: draw_block(temp_surf, x*BLOCK_SIZE, y*BLOCK_SIZE, col)
     if not is_game_over:
         gy = get_ghost_y(board, cp)
         for y, row in enumerate(cp["shape"]):
@@ -220,26 +90,19 @@ def render_all(board, cp, n_queue, hp, score, level, combo, is_game_over, is_pau
                 if cell:
                     draw_block(temp_surf, (cp["x"]+x)*BLOCK_SIZE, (gy+y)*BLOCK_SIZE, cp["color"], is_ghost=True)
                     if cp["y"]+y >= 0: draw_block(temp_surf, (cp["x"]+x)*BLOCK_SIZE, (cp["y"]+y)*BLOCK_SIZE, cp["color"])
-    
-    # 파티클 그리기
     for p in particles: p.draw(temp_surf)
-
     if flash_alpha > 0:
-        f = pygame.Surface((GAME_WIDTH, SCREEN_HEIGHT)); f.fill((255,255,255)); f.set_alpha(flash_alpha)
-        temp_surf.blit(f, (0,0))
-        
+        f = pygame.Surface((GAME_WIDTH, SCREEN_HEIGHT)); f.fill((255,255,255)); f.set_alpha(flash_alpha); temp_surf.blit(f, (0,0))
     sidebar_x = GAME_WIDTH + 25
     temp_surf.blit(tm.static_labels["NEXT"], (sidebar_x, 20))
     for i in range(3):
-        p_next = n_queue[i]
-        box_y = 45 + (i * 75)
+        p_next = n_queue[i]; box_y = 45 + (i * 75)
         pygame.draw.rect(temp_surf, (35, 36, 45), (sidebar_x, box_y, 150, 65))
         s, c = p_next["shape"], p_next["color"]
         bx, by = sidebar_x + (150 - len(s[0])*20)//2, box_y + (65 - len(s)*20)//2
         for sy, srow in enumerate(s):
             for sx, scell in enumerate(srow):
                 if scell: draw_block(temp_surf, bx+sx*20, by+sy*20, c, size=20)
-                
     temp_surf.blit(tm.static_labels["HOLD"], (sidebar_x, 285))
     pygame.draw.rect(temp_surf, (35, 36, 45), (sidebar_x, 310, 150, 80))
     if hp:
@@ -248,33 +111,23 @@ def render_all(board, cp, n_queue, hp, score, level, combo, is_game_over, is_pau
         for sy, srow in enumerate(s):
             for sx, scell in enumerate(srow):
                 if scell: draw_block(temp_surf, bx+sx*20, by+sy*20, c, size=20)
-                
     sy = 410
     for label, val, col in [("SCORE", score, (0,255,180)), ("LEVEL", level, (255,200,0)), ("COMBO", combo, (255,100,100))]:
         temp_surf.blit(tm.static_labels[label], (sidebar_x, sy))
-        temp_surf.blit(tm.get_val_surf(val, col), (sidebar_x, sy+22))
-        sy += 65
-        
+        temp_surf.blit(tm.get_val_surf(val, col), (sidebar_x, sy+22)); sy += 65
     if is_paused or is_game_over:
-        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA)
-        overlay.fill((0,0,0,180)); temp_surf.blit(overlay, (0,0))
-        txt_key = "PAUSED" if is_paused else "GAME OVER"
-        surf = tm.static_labels[txt_key]
-        temp_surf.blit(surf, (SCREEN_WIDTH//2 - surf.get_width()//2, SCREEN_HEIGHT//2 - 30))
-        
+        overlay = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.SRCALPHA); overlay.fill((0,0,0,180))
+        temp_surf.blit(overlay, (0,0)); txt = "PAUSED" if is_paused else "GAME OVER"
+        surf = tm.static_labels[txt]; temp_surf.blit(surf, (SCREEN_WIDTH//2-surf.get_width()//2, SCREEN_HEIGHT//2-30))
     return temp_surf
 
 # --- 메인 루프 ---
 def main():
-    pygame.init()
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("Tetris: Final Optimized")
-    clock = pygame.time.Clock()
-    tm = TextManager()
-    sfx = load_sounds()
-    play_game_music()
+    pygame.init(); screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    pygame.display.set_caption("Tetris: Modular Edition"); clock = pygame.time.Clock()
+    tm = TextManager(); sfx = load_sounds(); play_game_music()
 
-    def reset(): 
+    def reset():
         q = get_7_bag() + get_7_bag()
         return (create_board(), q.pop(0), q, None, True, 0, 1, 0, 0, False, 0, 0, 0, 0, False, False, [])
 
@@ -284,14 +137,12 @@ def main():
     while True:
         dt = clock.tick(60)
         if not is_paused:
-            flash_alpha = max(0, flash_alpha-8)
-            shake_intensity = max(0, shake_intensity-1)
-            # 파티클 업데이트
+            flash_alpha = max(0, flash_alpha-8); shake_intensity = max(0, shake_intensity-1)
             particles = [p for p in particles if p.age < p.life]
             for p in particles: p.update()
 
         if not is_game_over and not is_paused:
-            fall_speed = max(70, 800 - (level - 1) * 52) 
+            fall_speed = max(70, 800 - (level - 1) * 52)
             if is_valid_move(board, cp, adj_y=1):
                 drop_time += dt; lock_timer = 0
                 if drop_time > fall_speed: cp["y"] += 1; drop_time = 0; last_was_rotate = False
@@ -302,20 +153,14 @@ def main():
                     for y, row in enumerate(cp["shape"]):
                         for x, cell in enumerate(row):
                             if cell and cp["y"]+y >= 0: board[cp["y"]+y][cp["x"]+x] = cp["color"]
-                    
                     full_l = [i for i, r in enumerate(board) if None not in r]
                     if full_l or is_ts:
-                        if is_ts:
-                            score += {0:400, 1:800, 2:1200, 3:1600}.get(len(full_l), 400) * level
-                            shake_intensity, flash_alpha = 15, 200
+                        if is_ts: score += {0:400, 1:800, 2:1200, 3:1600}.get(len(full_l), 400) * level; shake_intensity, flash_alpha = 15, 200
                         if full_l:
                             if sfx.get('clear'): sfx['clear'].play()
-                            # 라인 클리어 파티클 생성
                             for ly in full_l:
                                 for lx in range(GRID_WIDTH):
-                                    for _ in range(2):
-                                        particles.append(Particle(lx*BLOCK_SIZE + 15, ly*BLOCK_SIZE + 15, (255,255,255)))
-                            
+                                    for _ in range(2): particles.append(Particle(lx*BLOCK_SIZE+15, ly*BLOCK_SIZE+15, (255,255,255)))
                             score += ({1:100, 2:300, 3:500, 4:800}[len(full_l)] * level) + (combo * 50)
                             combo += 1; total_l += len(full_l)
                             board = [[None]*GRID_WIDTH for _ in range(len(full_l))] + [r for i, r in enumerate(board) if i not in full_l]
@@ -324,12 +169,10 @@ def main():
                                 if sfx.get('lvl_up'): sfx['lvl_up'].play()
                         else: combo = 0
                     else: combo = 0
-
                     if any(cell and cp["y"]+y < 0 for y, row in enumerate(cp["shape"]) for x, cell in enumerate(row)):
                         is_game_over = True
                         if play_ending_music(level, score) == "BSOD": draw_bsod(screen, score, tm)
-                    
-                    cp = n_queue.pop(0); 
+                    cp = n_queue.pop(0)
                     if len(n_queue) <= 7: n_queue.extend(get_7_bag())
                     can_hold, lock_timer, last_was_rotate = True, 0, False
 
@@ -364,9 +207,7 @@ def main():
 
         s_off = (random.randint(-shake_intensity, shake_intensity), random.randint(-shake_intensity, shake_intensity)) if shake_intensity > 0 else (0,0)
         final_render = render_all(board, cp, n_queue, hp, score, level, combo, is_game_over, is_paused, flash_alpha, tm, particles)
-        screen.fill((0, 0, 0))
-        screen.blit(final_render, s_off)
-        pygame.display.flip()
+        screen.fill((0, 0, 0)); screen.blit(final_render, s_off); pygame.display.flip()
 
 if __name__ == "__main__":
     main()
