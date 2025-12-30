@@ -1,28 +1,20 @@
-# 게임 설정, 색상, 경로 등 변하지 않는 값들
+# --- 경로 및 파일명 설정 (웹 최적화) ---
+# 웹 환경에서는 상대 경로를 직접 사용하는 것이 가장 안전합니다.
+MUSIC_DIR = "music"
 
-import os
-import sys
+# [중요] 실제 폴더 안의 파일명을 아래와 같이 공백 없이 영어로 바꾸는 것을 강력 권장합니다.
+# 파일명을 바꾸셨다면 아래 변수값도 똑같이 맞춰주세요.
+NORMAL_BGM = "bgm_type_a.mp3"              # 03. A-Type... 수정본
+HIDDEN_BGM = "suisei_tetris.mp3"            # Suisei's... 수정본
+LEVEL_UP_SOUND_PATH = "music/lvl_up.wav"
+LINE_CLEAR_SOUND_PATH = "music/clear.mp3"
+HARD_DROP_SOUND_PATH = "music/drop.wav"
 
-# --- 경로 및 파일명 설정 ---
-if getattr(sys, 'frozen', False):
-    BASE_PATH = sys._MEIPASS
-else:
-    BASE_PATH = os.path.dirname(os.path.abspath(__file__))
-
-MUSIC_DIR = os.path.join(BASE_PATH, "music")
-
-# BGM 및 효과음 파일명
-NORMAL_BGM = "03. A-Type Music (Korobeiniki).mp3"
-HIDDEN_BGM = "Suisei's Tetris.mp3"
-LEVEL_UP_SOUND_PATH = os.path.join(MUSIC_DIR, "mixkit-game-level-completed-2059.wav")
-LINE_CLEAR_SOUND_PATH = os.path.join(MUSIC_DIR, "A quick, ascending chime for a single line clear in Tetris.-edited-2025-12-26T15-09-09.mp3")
-HARD_DROP_SOUND_PATH = os.path.join(MUSIC_DIR, "A subtle, percussive thud for a Tetris block landing.-edited-2025-12-26T15-08-00.wav")
-
-# 엔딩 BGM 파일명
-SND_DEATHMATCH = "18. Game Over.mp3"
-SND_ENDING_LV5 = "09. Ending.mp3"
-SND_ENDING_LV10 = "15. Ending (Level 9, High 5).mp3"
-SND_ENDING_TRUE = "16. True Ending (Level 9, High 5, 100000 Points).mp3"
+# 엔딩 BGM 파일명 (공백 제거 추천)
+SND_DEATHMATCH = "gameover.mp3"
+SND_ENDING_LV5 = "ending_lv5.mp3"
+SND_ENDING_LV10 = "ending_lv10.mp3"
+SND_ENDING_TRUE = "ending_true.mp3"
 
 # --- 환경 변수 ---
 BLOCK_SIZE = 30
