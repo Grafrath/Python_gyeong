@@ -42,7 +42,7 @@ def cal_state(col):
     mean_val = col.mean()
     median_val = col.median()
 
-    return pd.Series([col.max(), col.min(), col.mean(), col.median()], 
+    return pd.Series([max_val, min_val, mean_val, median_val], 
                      index=['Max', 'Min', 'Mean', 'Median'])
 
 df_stats = df.apply(cal_state, axis=0)

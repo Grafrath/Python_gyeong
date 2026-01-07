@@ -20,14 +20,17 @@ print()
 def z_score(x):
     return (x - x.mean()) / x.std()
 
+print('age_zscore')
 age_zscore = grouped['age'].transform(z_score)
 print(age_zscore.head())
 print()
 
+print('age_zscore2')
 age_zscore2 = grouped['age'].transform(lambda x: (x - x.mean()) / x.std())
 print(age_zscore2.head())
 print()
 
+print('age_zscore3')
 age_zscore3 = (df['age'] - grouped['age'].transform('mean')) / grouped['age'].transform('std')
 print(age_zscore3.head())
 print()

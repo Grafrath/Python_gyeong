@@ -33,3 +33,24 @@ pdf3 = pd.pivot_table(df, index='class', # class가 행
                       aggfunc=['mean', 'sum'], observed=True) # 데이터 집계함수
 print(pdf3)
 print()
+
+print('\n-------- stack --------\n')
+
+df = pdf3
+df_stacked = df.stack(future_stack=True)
+print(df_stacked)
+print()
+
+df_unstacked = df_stacked.unstack()
+print(df_unstacked)
+print()
+
+df_unstacked = df_stacked.unstack(level=0)
+print(df_unstacked)
+print()
+
+df_unstacked2 = df_unstacked.unstack(level=1)
+print(df_unstacked2)
+print()
+
+
