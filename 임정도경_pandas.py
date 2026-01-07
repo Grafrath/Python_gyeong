@@ -197,7 +197,7 @@ Second female  28.748684  12.700882   21.970121  10.891796  0.921053  0.271448  
 '''
 print('\n------------ 28번 문제 ------------\n')
 result = grouped[['age', 'fare', 'survived', 'cl_age_mean']].agg(['mean', 'std'], numeric_only=True)
-print(result.iloc[:4])
+print(result)
 
 # 29. 성별, 나이, 클래스만 남긴 df2를 새로 만들고 age가 널값인 행의 인덱스를 "리스트"로 출력 (5)
 print('\n------------ 29번 문제 ------------\n')
@@ -207,8 +207,9 @@ print(f"Age 널값 인덱스: {null_idx}")
 
 # 30. 클래스 & 성별 별 나이 평균으로 age 널값을 채우고 상위 50행 출력. (8)
 print('\n------------ 30번 문제 ------------\n')
+print(df2.head(10))
 cl_gen = df2.groupby(['class', 'sex'], observed=False)
-df2['age'] = df2['age'].fillna(cl_gen['age'].transform('mean'))
+df2['age'] = df2['age'].fillna(cl_gen['age'])
 print(df2.head(50))
 
 
