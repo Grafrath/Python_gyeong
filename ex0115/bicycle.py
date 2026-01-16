@@ -154,13 +154,6 @@ print(rainy_days_count)
 print("-" * 60)
 print(f"※ 총 분석 기간: {daily_weather_type['date'].nunique()}일")
 
-'''print(f"1. 자전거 대여 기록이 있는 총 일수: {rentals['date'].nunique()}일")
-print(f"2. 기상 데이터가 존재하는 총 일수: {weather_daily['date'].nunique()}일")
-print(f"3. 두 데이터가 결합된 최종 분석 일수: {final_df['date'].nunique()}일")
-
-missing_days = set(rentals['date'].unique()) - set(final_df['date'].unique())
-if missing_days:
-    print(f"※ 분석에서 제외된 날짜 예시: {list(missing_days)[:5]}")'''
 
 print()
 print("="*60)
