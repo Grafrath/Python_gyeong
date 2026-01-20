@@ -18,10 +18,13 @@ smelt_weight = [6.7, 7.5, 7.0, 9.7, 9.8, 8.7, 10.0, 9.9, 9.8, 12.2, 13.4, 12.2, 
 # plt.ylabel('weight')
 # plt.show()
 
-length = bream_length + smelt_length
+# 도미와 빙어 데이터 결합
+length = bream_length + smelt_length  
 weight = bream_weight + smelt_weight
 
+# zip 활용 (길이, 무게) 쌍 리스트 생성
 fish_data = [[l, w] for l, w in zip (length, weight)]
+# 도미 1, 빙어 0
 fish_target = [1] * 35 + [0] * 14
 
 print(fish_data)
@@ -31,11 +34,11 @@ print()
 
 kn.fit(fish_data, fish_target)
 
-# plt.scatter(length, weight)
-# plt.scatter(30, 600, marker='^')
-# plt.xlabel('length')
-# plt.ylabel('weight')
-# plt.show()
+plt.scatter(length, weight)
+plt.scatter(30, 600, marker='^')
+plt.xlabel('length')
+plt.ylabel('weight')
+plt.show()
 
 print(kn.predict([[30, 600]]))
 print(kn.score(fish_data, fish_target))  
