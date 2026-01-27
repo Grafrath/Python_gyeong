@@ -2,11 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 
-from scipy.special import expit
-from scipy.special import softmax
-
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import SGDClassifier
 
@@ -25,8 +21,8 @@ print(pd.unique(fish['Species']))
 print()
 
 print('\n================ 훈련/테스트 분할 ================\n')
-fish_input = fish[['Weight', 'Length', 'Diagonal', 'Height', 'Width']].to_numpy()
-fish_target = fish['Species'].to_numpy() 
+fish_input = fish[['Weight', 'Length', 'Diagonal', 'Height', 'Width']]
+fish_target = fish['Species']
 
 
 
