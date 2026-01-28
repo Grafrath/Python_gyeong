@@ -76,3 +76,18 @@ print('\n================ 시각화 데이터 생성 ================\n')
 RocCurveDisplay.from_estimator(lr, test_scaled, test_target)
 plt.title("ROC Curve - Breast Cancer Detection")
 plt.show()
+
+'''
+재현율 (Recall / TPR)공식: TP / (TP + FN)
+의미: 실제 1인 데이터를 얼마나 잘 찾아냈는가?
+예시: 암 진단처럼 "병이 있는데 없다고 하면 큰일 나는 경우"에 가장 중요하게 봅니다.
+
+위양성률 (FPR)공식: FP / (FP + TN)
+의미: 실제로는 0인데 1이라고 잘못 예측한 비율은 얼마인가?
+예시: 스팸 메일 분류처럼 "중요한 메일을 스팸으로 분류하면 안 되는 경우"에 이 수치를 낮추는 것이 중요합니다.
+
+임계점 (Threshold)
+모델이 출력하는 predict_proba(확률값)에 적용하는 필터입니다.
+보통 0.5를 쓰지만, 데이터의 특성에 따라 0.3이나 0.7로 조정하여 모델의 성향을 바꿀 수 있습니다.
+'''
+
