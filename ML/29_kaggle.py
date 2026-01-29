@@ -99,3 +99,19 @@ plt.hist(x=[train_df['Age'][train_df['Survived']==0], train_df['Age'][train_df['
          label=['Death', 'Survived'])
 plt.legend()
 plt.show()
+
+print('\n======================== 더미 생성 ========================\n')
+# 카테고리 변수(컬럼)을 더미 변수로
+train_df_corr = pd.get_dummies(
+    train_df,
+    columns=['Sex', 'Embarked'],
+    drop_first=True,
+    dtype=int
+)
+
+# 상관관계 개선
+train_corr = train_df_corr.corr(numeric_only=True)
+
+print('\n==== 상관관계 ====\n')
+print(train_corr)
+print()
