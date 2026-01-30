@@ -324,3 +324,6 @@ print()
 submission['Survived'] = final_preds.astype(int)
 submission.to_csv('./data/titanic/titanic_submit_01.csv', index=False)
 print(submission['Survived'].value_counts())
+
+
+
