@@ -206,10 +206,10 @@ lgbm = lgb.LGBMClassifier(
     objective='binary',
     metric='binary_logloss',
 
-    n_estimators=300,
+    n_estimators=200,
     learning_rate=0.02,
 
-    num_leaves=24,
+    num_leaves=15,
     max_depth=-1,
     min_child_samples=30,
     min_child_weight=1e-3,
@@ -267,6 +267,14 @@ svc.fit(X_train_l_df, y_train_l)
 print("학습 완료")
 print()
 
+print("\n======================== 교차 검증 결과 ========================\n")
+print(f"{'Model':<20} | {'CV Accuracy':<15} | {'CV F1-Score':<15}")
+print("-" * 60)
+print(f"{'Logistic Regression':<20} | {cv_acc_lg:.4f}        | {cv_f1_lg:.4f}")
+print(f"{'SVC':<20} | {cv_acc_svc:.4f}       | {cv_f1_svc:.4f}")
+print(f"{'LightGBM':<20} | {cv_acc_lgbm:.4f}      | {cv_f1_lgbm:.4f}")
+print()
+
 print("\n======================== 모델 성능 평가 ========================\n")
 # 성능 기록용 리스트
 model_names = []
@@ -298,7 +306,7 @@ X_train_l_df = pd.DataFrame(X_train_l, columns=features_linear)
 X_val_l_df = pd.DataFrame(X_val_l, columns=features_linear)
 X_test_final_linear_df = pd.DataFrame(X_test_final_linear, columns=features_linear)
 
-weights = [1, 1, 2]
+weights = [1.5, 0.5, 2]
 
 # 보팅 앙상블 모델 정의
 voting_model = VotingClassifier(
@@ -376,49 +384,26 @@ print("\n[프로젝트 종료] 모든 결과 파일이 생성되었습니다.")
 사용 모델은 Logistic Regression, Gradient Boosting, Svc 이며,
 전처리 과정에 최대한 많은 공을 들였습니다.
 
-항구는 요금을 기준으로 비교해서 대입하였고,
-나이는 호칭을 이용했으며,
-요금 결측치는 등급별 평균을 대입하였습니다.
+    - Embarked: 요금 분포와 등급을 고려하여 최빈값인 'C'로 보완.
+    - Age: 단순 평균이 아닌 'Name'에서 추출한 호칭별 중앙값을 적용 후, 구간별로 나눠 연관성 확대.
+    - Fare: Pclass별 중앙값으로 결측치를 채운 후,
+        왜도 완화를 위해 log 변환 적용.
 
-기존에는 버리던 호실 정보를 이용하였습니다.
-또한 SibSp와 Parch를 이용해 혼자 이용하였는지 여부도 체크하였습니다.
+파생 변수로
+    - Cabin 정보에서 Deck(구역)을 추출하여 위치에 따른 생존율 반영.
+    - SibSp와 Parch를 통합하여 FamilySize를 구하고,
+        이를 그룹화(Alone, Small, Large)하여 가족 동반 여부 피처 생성.
 
-모델 학습과정에서는 트리 모델에는 Category 타입을,
-선형 모델에는 원-핫 인코딩과 스케일링을 적용하였고,
-각각의 데이터 셋을 분리하여 준비하였습니다.
+모델 준비시에도 모델별 최적화 전략으로 데이터 이원화를 이용하였습니다.
+    - 트리 계열(LightGBM): Label Encoding 및 범주형 데이터 타입 지정을 통해 트리 구조에 최적화.
+    - 선형/커널 모델(Logit, SVC): One-hot Encoding 및 StandardScaler를 적용하여 거리 기반 학습 효율 증대.
+    - 검증 전략: StratifiedKFold(5-fold)를 사용하여 클래스 불균형을 고려한 안정적인 성능 평가 수행.
 
-======================== 모델 성능 평가 ========================       
+모델 학습 및 성능 결과
+개별 모델을 독립적으로 학습하여 안정적인 검증 점수 확보하였고,
+전처리 최적화와 파생 변수 처리를 통해 기존 대비 캐글 스코어가 향상됨을 확인함.
+마지막으로 모델 간 편향 보완을 위해 Soft Voting을 적용하여 최종 성능을 극대화하였음.
 
-Model                | Accuracy   | F1-Score
---------------------------------------------------
-Logistic Regression  | 0.8212     | 0.7612
-SVC                  | 0.8101     | 0.7500
-LightGBM             | 0.8380     | 0.7717
-
-Voting Ensemble Accuracy: 0.8436
-Voting Ensemble F1-Score: 0.7846
-
-======================== 모델 성능 평가 ========================       
-
-Model                | Accuracy   | F1-Score
---------------------------------------------------
-Logistic Regression  | 0.8212     | 0.7612
-SVC                  | 0.8101     | 0.7536
-LightGBM             | 0.8324     | 0.7581
-
-Voting Ensemble Accuracy: 0.8492
-Voting Ensemble F1-Score: 0.7970
-
-======================== 모델 성능 평가 ========================       
-
-Model                | Accuracy   | F1-Score
---------------------------------------------------
-Logistic Regression  | 0.8324     | 0.7761
-SVC                  | 0.8045     | 0.7407
-LightGBM             | 0.7989     | 0.7049
-
-Voting Ensemble Accuracy: 0.8212
-Voting Ensemble F1-Score: 0.7647
-
-
+향후 계획으로 현재 구축된 앙상블 구조를 바탕으로
+하이퍼파라미터 미세 조정을 진행하여 추가적인 스코어 향상을 도모할 예정임.
 '''
