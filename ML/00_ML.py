@@ -339,3 +339,8 @@ Random Forest: 트리 기반 모델. 스케일링이 불필요함. 데이터의 
 # scikit-learn version: 1.8.0
 # scipy version: 1.17.0
 
+
+pip install pandas
+pip install numpy
+pip install scikit-learn
+pip install scipy
