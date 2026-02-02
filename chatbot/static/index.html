@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>영양 분석 시스템 테스트</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg: #f8fafc;
+            --card: #ffffff;
+        }
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background: var(--bg);
+            margin: 0;
+            padding: 20px;
+            color: #1e293b;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        header {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        section {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        h2 {
+            margin-top: 0;
+            font-size: 1.25rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+
+        /* 검색 영역 */
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .search-item {
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-item:hover {
+            background: #f1f5f9;
+        }
+
+        /* 요약 테이블 */
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .summary-table th {
+            text-align: left;
+            background: #f8fafc;
+            padding: 8px;
+        }
+
+        .summary-table td {
+            padding: 8px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .progress-bg {
+            background: #e2e8f0;
+            height: 8px;
+            border-radius: 4px;
+            width: 60px;
+            overflow: hidden;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #22c55e;
+            transition: width 0.3s;
+        }
+
+        /* 추천 섹션 */
+        .rec-card {
+            background: #eff6ff;
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>🍏 영양 관리 시스템 <small>(데이터 26만 건 모드)</small></h1>
+    </header>
+
+    <div class="container">
+        <section>
+            <h2>🔍 식품 검색</h2>
+            <div class="search-box">
+                <input type="text" id="q" placeholder="음식명 또는 브랜드 입력 (예: 치킨, 사과)"
+                    onkeypress="if(event.keyCode==13) search()">
+                <button onclick="search()">검색</button>
+            </div>
+            <div id="loading" style="display:none; text-align: center; color: var(--primary);">데이터가 많아 로딩 중입니다...</div>
+            <div id="results" style="max-height: 600px; overflow-y: auto;">
+                <p style="color: #64748b;">검색 결과가 여기에 표시됩니다.</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>📊 오늘의 영양 대시보드</h2>
+            <div id="summary-content">
+                <p>로딩 중...</p>
+            </div>
+
+            <h2>💊 부족 영양소 맞춤 추천</h2>
+            <div id="recommend-content">
+                <p>기록을 추가하면 분석을 시작합니다.</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        const HOST = "http://127.0.0.1:8000";
+
+        // 1. 음식 검색
+        async function search() {
+            const q = document.getElementById('q').value;
+            if (!q) return;
+
+            const loader = document.getElementById('loading');
+            const resDiv = document.getElementById('results');
+
+            loader.style.display = 'block';
+            resDiv.innerHTML = "";
+
+            try {
+                const res = await fetch(`${HOST}/search?q=${encodeURIComponent(q)}`);
+                const data = await res.json();
+
+                loader.style.display = 'none';
+                if (data.results.length === 0) {
+                    resDiv.innerHTML = "<p>검색 결과가 없습니다.</p>";
+                    return;
+                }
+
+                data.results.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'search-item';
+                    div.innerHTML = `
+                    <div>
+                        <div style="font-weight: bold;">${item.food_name}</div>
+                        <div style="font-size: 0.8rem; color: #64748b;">${item.brand || '일반'} | ${item.kcal}kcal</div>
+                    </div>
+                    <div>
+                        <input type="number" id="serv_${item.food_code}" value="1" step="0.5" style="width: 45px; padding: 5px;">
+                        <button onclick="logMeal('${item.food_code}')" style="padding: 5px 10px; font-size: 0.8rem;">추가</button>
+                    </div>
+                `;
+                    resDiv.appendChild(div);
+                });
+            } catch (e) {
+                console.error(e);
+                loader.style.display = 'none';
+                alert("서버 연결 실패! main.py가 실행 중인지 확인하세요.");
+            }
+        }
+
+        // 2. 식단 기록
+        async function logMeal(code) {
+            const serving = document.getElementById(`serv_${code}`).value;
+            try {
+                const res = await fetch(`${HOST}/log/meal`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ food_code: code, serving: parseFloat(serving) })
+                });
+                if (res.ok) {
+                    alert("✅ 기록 완료");
+                    loadSummary();
+                }
+            } catch (e) { alert("기록 실패"); }
+        }
+
+        // 3. 요약 데이터 로드
+        async function loadSummary() {
+            try {
+                const res = await fetch(`${HOST}/summary`);
+                const data = await res.json();
+
+                // 요약 테이블 구성
+                let html = `<table class="summary-table">
+                <thead><tr><th>영양소</th><th>섭취/권장</th><th>달성률</th></tr></thead>
+                <tbody>`;
+
+                for (const [key, val] of Object.entries(data.summary)) {
+                    const standard = data.standards[key];
+                    const rate = data.rates[key];
+                    const barColor = rate > 100 ? '#ef4444' : '#22c55e'; // 100% 넘으면 빨간색 경고
+
+                    html += `
+                    <tr>
+                        <td>${key.toUpperCase()}</td>
+                        <td>${val.toFixed(1)} / ${standard}</td>
+                        <td>
+                            <div class="progress-bg"><div class="progress-fill" style="width: ${Math.min(rate, 100)}%; background: ${barColor};"></div></div>
+                            ${rate}%
+                        </td>
+                    </tr>`;
+                }
+                html += `</tbody></table>`;
+                document.getElementById('summary-content').innerHTML = html;
+
+                // 추천 섹션 구성
+                const rec = data.recommendations;
+                let recHtml = `
+                <div class="rec-card">
+                    <p>🚩 가장 부족한 영양소: <strong>${rec.nutrient}</strong></p>
+                    <p>현재 달성률: <span class="status-badge" style="background: #dbeafe; color: #1e40af;">${rec.current_rate}%</span></p>
+                </div>
+            `;
+
+                if (rec.items && rec.items.length > 0) {
+                    recHtml += `<ul style="font-size: 0.9rem; padding-left: 20px;">`;
+                    rec.items.forEach(item => {
+                        recHtml += `<li><strong>[${item.brand}]</strong> ${item.food_name} <br> <small>함량: ${item.value}</small></li>`;
+                    });
+                    recHtml += `</ul>`;
+                }
+                document.getElementById('recommend-content').innerHTML = recHtml;
+
+            } catch (e) { console.error("Summary Load Error:", e); }
+        }
+
+        // 초기 실행
+        loadSummary();
+    </script>
+</body>
+
+</html>
